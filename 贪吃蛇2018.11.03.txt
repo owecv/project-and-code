@@ -1,0 +1,392 @@
+#include <iostream>
+#include <time.h>
+#include <list>
+#include <conio.h>
+#include <windows.h>
+using namespace std;
+
+const int MAPSIZE = 30;
+
+class Position
+{
+public:
+	int x;
+	int y;
+};
+/*
+1：空白
+2：墙
+3：蛇体
+4：食物
+*/
+class Map
+{
+public:
+	void InitMap();
+	void ShowMap(int);
+	void SetFood();//在棋盘上随机放置食物
+	void DrawSnack(list<Position> p);//将蛇画到地图上
+	int IsFood(int x, int y);//判断(x,y)位置是否为食物
+private:
+	int map[MAPSIZE][MAPSIZE];
+};
+
+void Map::InitMap()
+{
+	memset(map,0,MAPSIZE*MAPSIZE);//将棋盘对应的内存片置为0
+	for (int i = 0;i < MAPSIZE ;++i)
+	{
+		for (int j = 0;j < MAPSIZE ;++j)
+		{
+			if (i == 0 || i == MAPSIZE - 1||j==0||j==MAPSIZE-1)
+			{
+				map[i][j] = 2;
+			}
+			else
+			{
+				map[i][j] = 1;
+			}
+		}
+	}
+}
+
+void Map::ShowMap(int length)
+{
+	system("cls");
+	cout << "#***************@@欢迎使用贪吃蛇小游戏@@***************#" << endl << endl;
+	cout << "当前蛇体长度为：" << length << endl << endl;
+	for (int i = 0;i < MAPSIZE ;++i)
+	{
+		for (int j = 0;j < MAPSIZE ;++j)
+		{
+			if (map[i][j] == 1)
+			{
+				cout << "  ";
+			}
+			if (map[i][j] == 2)
+			{
+				cout << "# ";
+			}
+			if (map[i][j] == 3)
+			{
+				cout << "* ";
+			}
+			if (map[i][j] == 4)
+			{
+				cout << "* ";
+			}
+		}
+		cout << endl;
+	}
+}
+
+void Map::SetFood()//在棋盘上随机放置食物
+{
+	srand(time(0));//以系统时间为种子种随机数
+	int food0 = rand() % MAPSIZE;//判断食物是否放在了边界上
+	if (food0 == 0)
+	{
+		food0 = rand() % MAPSIZE;
+	}
+	if (food0 == MAPSIZE-1)
+	{
+		food0 = rand() % MAPSIZE ;
+	}
+	int food1 = rand() % MAPSIZE;
+	if (food1 == 0)
+	{
+		food1 = rand() % MAPSIZE;
+	}
+	if (food1 == MAPSIZE - 1)
+	{
+		food1 = rand() % MAPSIZE ;
+	}
+	map[food0][food1] = 4;
+}
+
+void Map::DrawSnack(list<Position> p)//将蛇画到地图上
+{
+	for (int i = 0;i < MAPSIZE ;++i)
+	{
+		for (int j = 0;j < MAPSIZE ;++j)
+		{
+			if (map[i][j] == 3 && i != MAPSIZE - 1 && i != 0 && j != 0 && j != MAPSIZE - 1)
+			{
+				map[i][j] = 1;
+			}
+
+			if (map[i][j] == 3 && i == 0)
+			{
+				map[i][j] = 2;
+			}
+			if (map[i][j] == 3 && i == MAPSIZE - 1)
+			{
+				map[i][j] = 2;
+			}
+			if (map[i][j] == 3 && j == 0)
+			{
+				map[i][j] = 2;
+			}
+			if (map[i][j] == 3 && j == MAPSIZE - 1)
+			{
+				map[i][j] = 2;
+			}
+		}
+	}
+	list<Position>::iterator it0 = p.begin();
+	for (int i = 0;i < p.size();++i)
+	{
+		Position temp;
+		temp.x = it0->x;
+		temp.y = it0->y;
+		map[temp.x][temp.y] = 3;
+		++it0;
+	}
+}
+
+int Map::IsFood(int x, int y)//判断(x,y)位置是否为食物
+{
+	if (map[x][y] == 4)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+class Snack:public Map
+{
+public:
+	Snack() 
+	{
+		Position temp;
+		temp.x = 1;
+		temp.y = 1;
+		snack.push_back(temp);
+	}
+	void LeftMove();//蛇向左走
+	void RightMove();//蛇向右走
+	void UpMove();//蛇向上走
+	void DownMove();//蛇向下走
+	int SnackLength() { return snack.size(); }//返回蛇体长度
+private:
+	list<Position> snack;
+};
+
+void Snack::LeftMove()//蛇向左走
+{
+	list<Position>::iterator it = snack.end();
+	--it;
+	Position temp;
+	temp.x = it->x;
+	temp.y = it->y - 1;
+	if (temp.y == 0)
+	{
+		system("cls");
+		cout << "Game Over!" << endl;
+		exit(0);
+	}
+	snack.push_back(temp);
+	int a = IsFood(temp.x, temp.y);
+	if (a == 0)
+	{
+		snack.pop_front();
+	}
+	else if (a == 1)
+	{
+		SetFood();
+	}
+	//将蛇画到地图上
+	it = snack.begin();
+	while (it != snack.end())
+	{
+		DrawSnack(snack);
+		++it;
+	}
+}
+
+void Snack::RightMove()//蛇向右走
+{
+	list<Position>::iterator it = snack.end();
+	--it;
+	Position temp;
+	temp.x = it->x;
+	temp.y = it->y + 1;
+	if (temp.y == MAPSIZE-1)
+	{
+		system("cls");
+		cout << "Game Over!" << endl;
+		exit(0);
+	}
+	snack.push_back(temp);
+	int a = IsFood(temp.x, temp.y);//判断是否遇到食物
+	if (a==0)
+	{
+		snack.pop_front();
+	}
+	else if (a == 1)
+	{
+		SetFood();
+	}
+	//将蛇画到地图上
+	it = snack.begin();
+	while (it!=snack.end())
+	{
+		DrawSnack(snack);
+		++it;
+	}
+}
+
+void Snack::UpMove()//蛇向上走
+{
+	list<Position>::iterator it = snack.end();
+	--it;
+	Position temp;
+	temp.x = it->x-1;
+	temp.y = it->y;
+	if (temp.x == 0)
+	{
+		system("cls");
+		cout << "Game Over!" << endl;
+		exit(0);
+	}
+	snack.push_back(temp);
+	int a = IsFood(temp.x, temp.y);
+	if (a == 0)
+	{
+		snack.pop_front();
+	}
+	else if (a == 1)
+	{
+		SetFood();
+	}
+	//将蛇画到地图上
+	it = snack.begin();
+	while (it != snack.end())
+	{
+		DrawSnack(snack);
+		++it;
+	}
+}
+
+void Snack::DownMove()//蛇向下走
+{
+	list<Position>::iterator it = snack.end();
+	--it;
+	Position temp;
+	temp.x = it->x + 1;
+	temp.y = it->y;
+	if (temp.x == MAPSIZE-1)
+	{
+		system("cls");
+		cout << "Game Over!" << endl;
+		exit(0);
+	}
+	snack.push_back(temp);
+	int a = IsFood(temp.x, temp.y);
+	if (a == 0)
+	{
+		snack.pop_front();
+	}
+	else if (a == 1)
+	{
+		SetFood();
+	}
+	//将蛇画到地图上
+	it = snack.begin();
+	while (it != snack.end())
+	{
+		DrawSnack(snack);
+		++it;
+	}
+}
+
+/*
+#include <conio.h>
+#include <iostream>
+
+using namespace std;
+
+int main()
+{
+int ch;
+while (1){
+if (_kbhit()){//如果有按键按下，则_kbhit()函数返回真
+ch = _getch();//使用_getch()函数获取按下的键值
+cout << ch;
+if (ch == 27){ break; }//当按下ESC时循环，ESC键的键值时27.
+}
+}
+system("pause");
+}
+---------------------
+作者：lindorx
+来源：CSDN
+原文：https://blog.csdn.net/lindorx/article/details/78760610
+版权声明：本文为博主原创文章，转载请附上博文链接！
+*/
+
+void Game()
+{
+	Map MyMap;
+	Snack MySnack;
+	MySnack.InitMap();
+	MySnack.SetFood();
+	char ch='d';//记录按下哪个按键，默认向右走
+	while (1)
+	{
+		int SnackLength = MySnack.SnackLength();
+		MySnack.ShowMap(SnackLength);
+		if (_kbhit())//如果有按键按下，则_kbhit()函数返回真
+		{
+			ch = _getch();//使用_getch()函数获取按下的键值
+			if (ch == 'w')
+			{
+				MySnack.UpMove();
+			}
+			if (ch == 's')
+			{
+				MySnack.DownMove();
+			}
+			if (ch == 'a')
+			{
+				MySnack.LeftMove();
+			}
+			if (ch == 'd')
+			{
+				MySnack.RightMove();
+			}
+		}
+		else
+		{
+			if (ch == 'w')
+			{
+				MySnack.UpMove();
+				Sleep(500);
+			}
+			if (ch == 's')
+			{
+				MySnack.DownMove();
+				Sleep(500);
+			}
+			if (ch == 'a')
+			{
+				MySnack.LeftMove();
+				Sleep(500);
+			}
+			if (ch == 'd')
+			{
+				MySnack.RightMove();
+				Sleep(500);
+			}
+		}
+	}
+}
+
+int main()
+{
+	Game();
+	return 0;
+}
